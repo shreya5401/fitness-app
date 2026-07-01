@@ -1,0 +1,49 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "GatewayApplication",
+            "request": "launch",
+            "mainClass": "com.fitness.gateway.GatewayApplication",
+            "projectName": ""
+        },
+        {
+            "type": "java",
+            "name": "ConfigserverApplication",
+            "request": "launch",
+            "mainClass": "com.fitness.configserver.ConfigserverApplication",
+            "projectName": "configserver"
+        },
+        {
+            "type": "java",
+            "name": "AiserviceApplication",
+            "request": "launch",
+            "mainClass": "com.fitness.aiservice.AiserviceApplication",
+            "projectName": "aiservice",
+            "cwd": "${workspaceFolder}/aiservice"
+        },
+        {
+            "type": "java",
+            "name": "UserserviceApplication",
+            "request": "launch",
+            "mainClass": "com.fitness.userservice.UserserviceApplication",
+            "projectName": "userservice"
+        },
+        {
+            "type": "java",
+            "name": "EurekaApplication",
+            "request": "launch",
+            "mainClass": "com.server.eureka.EurekaApplication",
+            "projectName": "eureka"
+        },
+        {
+            "type": "java",
+            "name": "ActivityserviceApplication",
+            "request": "launch",
+            "mainClass": "com.fitness.activityservice.ActivityserviceApplication",
+            "projectName": "activityservice",
+            "cwd": "${workspaceFolder}/activityservice"
+        }
+    ]
+}
