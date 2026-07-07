@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {Box, Button, TextField} from "@mui/material";
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-
+import { addActivity } from '../services/api';
 
 const ActivityForm = ({onActivityAdded}) => {
     const[activity, setActivity] = useState({ 
@@ -16,7 +16,7 @@ const ActivityForm = ({onActivityAdded}) => {
             onActivityAdded();
             setActivity({ type:"RUNNING" , duration: '', caloriesBurnt: ''});
         }catch(error){
-
+            console.error("Error:", error);
         }
     }
     return (

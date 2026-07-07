@@ -13,7 +13,7 @@ import ActivityDetail from './components/ActivityDetail';
 const ActivitiesPage = () => {
   return(
     <Box component="section" sx={{ p: 2 , border: '1px dashed grey'}}>
-      <ActivityForm onActivitiesAdded = {() => window.location.reload()} />
+      <ActivityForm onActivityAdded = {() => window.location.reload()} />
       <ActivityList />
     </Box>
   )
@@ -44,6 +44,7 @@ function App() {
         //   <pre>{JSON.stringify(token, null, 2)}</pre>
         // </div>
         <Box component="section" sx={{ p: 2 , border: '1px dashed grey'}}>
+          <Button variant="contained" color="secondary" onClick={logOut}>Logout</Button>
           <Routes>
             <Route path="/activities" element={<ActivitiesPage />} />
             <Route path="/activities/:id" element={<ActivityDetail />} />
