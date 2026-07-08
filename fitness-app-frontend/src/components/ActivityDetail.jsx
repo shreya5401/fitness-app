@@ -41,53 +41,53 @@ const ActivityDetail = () => {
   }, [id]);
 
   if(!activity){
-    return <Typography>Loading...</Typography>
+    return <Typography sx={{ color: '#a0a0a0', p: 3 }}>Loading...</Typography>
   }
 
   return (
-    <Box sx={{maxWidth: 800, mx: 'auto', p:2}}>
-        <Card sx={{mb:2}}>
+    <Box sx={{maxWidth: 800, mx: 'auto'}}>
+        <Card sx={{mb:3}}>
             <CardContent>
-                <Typography variant="h5" gutterBottom>Activity Details</Typography>
-                <Typography>Type: {activity.type}</Typography>
-                <Typography>Duration: {activity.duration} minutes</Typography>
-                <Typography>Calories Burnt: {activity.caloriesBurnt}</Typography>
-                <Typography>Date: {new Date(activity.createdAt).toLocaleString()}</Typography>
+                <Typography variant="h5" gutterBottom sx={{ color: '#FF5B93' }}>Activity Details</Typography>
+                <Typography sx={{ color: '#ffffff' }}>Type: {activity.type}</Typography>
+                <Typography sx={{ color: '#a0a0a0' }}>Duration: {activity.duration} minutes</Typography>
+                <Typography sx={{ color: '#a0a0a0' }}>Calories Burnt: {activity.caloriesBurnt}</Typography>
+                <Typography sx={{ color: '#a0a0a0' }}>Date: {new Date(activity.startTime || activity.createdAt).toLocaleString()}</Typography>
             </CardContent>
         </Card>
 
         {recommendation ? (
             <Card>
                 <CardContent>
-                    <Typography variant="h5" gutterBottom>AI Recommendation</Typography>
-                    <Typography variant="h6">Analysis</Typography>
-                    <Typography>{recommendation.recommendation}</Typography>
+                    <Typography variant="h5" gutterBottom sx={{ color: '#FF5B93' }}>AI Recommendation</Typography>
+                    <Typography variant="h6" sx={{ color: '#ffffff' }}>Analysis</Typography>
+                    <Typography sx={{ color: '#a0a0a0' }}>{recommendation.recommendation}</Typography>
 
-                    <Divider sx={{my:2}} />
+                    <Divider sx={{my:2, borderColor: '#2a2a2a'}} />
 
-                    <Typography variant="h6">Improvements</Typography>
+                    <Typography variant="h6" sx={{ color: '#ffffff' }}>Improvements</Typography>
                     {recommendation?.improvements?.map((improvement, index) => (
-                        <Typography key={index}>• {improvement}</Typography>
+                        <Typography key={index} sx={{ color: '#a0a0a0' }}>• {improvement}</Typography>
                     ))}
 
-                    <Divider sx={{my:2}} />
+                    <Divider sx={{my:2, borderColor: '#2a2a2a'}} />
 
-                    <Typography variant="h6">Suggestions</Typography>
+                    <Typography variant="h6" sx={{ color: '#ffffff' }}>Suggestions</Typography>
                     {recommendation?.suggestions?.map((suggestion, index) => (
-                        <Typography key={index}>• {suggestion}</Typography>
+                        <Typography key={index} sx={{ color: '#a0a0a0' }}>• {suggestion}</Typography>
                     ))}
 
-                    <Divider sx={{my:2}} />
-                    <Typography variant="h6">Safety Guidelines</Typography>
+                    <Divider sx={{my:2, borderColor: '#2a2a2a'}} />
+                    <Typography variant="h6" sx={{ color: '#ffffff' }}>Safety Guidelines</Typography>
                     {recommendation?.safety?.map((safety, index) => (
-                        <Typography key={index}>• {safety}</Typography>
+                        <Typography key={index} sx={{ color: '#a0a0a0' }}>• {safety}</Typography>
                     ))}
                 </CardContent>
             </Card>
         ) : (
             <Card>
                 <CardContent>
-                    <Typography>AI recommendation is still being generated...</Typography>
+                    <Typography sx={{ color: '#a0a0a0' }}>AI recommendation is still being generated...</Typography>
                 </CardContent>
             </Card>
         )}

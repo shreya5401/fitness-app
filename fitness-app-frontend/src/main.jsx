@@ -1,8 +1,12 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import './index.css'
 
 import { Provider } from 'react-redux'
 import {store} from './store/store'
+
+import { ThemeProvider, CssBaseline } from '@mui/material'
+import { theme } from './theme'
 
 import App from './App'
 
@@ -12,10 +16,13 @@ import { authConfig } from './authConfig'
 // As of React 18
 const root = ReactDOM.createRoot(document.getElementById('root'))
 root.render(
-  <AuthProvider authConfig={authConfig}
-                loadingComponent={<div>Loading...</div>}>
-    <Provider store={store}>
-      <App />
-    </Provider>
-  </AuthProvider>,
+  <ThemeProvider theme={theme}>
+    <CssBaseline />
+    <AuthProvider authConfig={authConfig}
+                  loadingComponent={<div>Loading...</div>}>
+      <Provider store={store}>
+        <App />
+      </Provider>
+    </AuthProvider>
+  </ThemeProvider>,
 )

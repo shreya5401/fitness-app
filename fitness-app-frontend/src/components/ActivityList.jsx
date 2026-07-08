@@ -1,40 +1,49 @@
-import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import {Card, CardContent, Grid, Typography} from "@mui/material";
-import { getActivities } from '../services/api';
+import { Box, Card, CardContent, Grid, Typography, Chip } from "@mui/material";
 
-const ActivityList = () => {
-  const [activities, setActivities] = useState([]);
+const formatDate = (activity) => {
+  const raw = activity.startTime || activity.createdAt;
+  if (!raw) return '';
+  return new Date(raw).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+const ActivityList = ({ activities = [] }) => {
   const navigate = useNavigate();
 
-  const fetchActivities = async () => {
-    try {
-      const response = await getActivities();
-      setActivities(response.data);
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchActivities();
-  }, []);
+  const recentActivities = [...activities]
+    .sort((a, b) => new Date(b.startTime || b.createdAt) - new Date(a.startTime || a.createdAt))
+    .slice(0, 3);
 
   return (
-    <Grid container spacing={2}>
-      {activities.map((activity) => (
-        <Grid key={activity.id} size={{ xs: 4, sm: 4, md: 4 }}>
-          <Card sx={{cursor:'pointer'}}
-            onClick={() => navigate(`/activities/${activity.id}`)}>
-              <CardContent>
-                <Typography variant="h6">{activity.type}</Typography>
-                <Typography>Duration: {activity.duration} minutes</Typography>
-                <Typography>Calories Burnt: {activity.caloriesBurnt}</Typography>
-              </CardContent>
-            </Card>
+    <Box sx={{ mt: 2 }}>
+      {recentActivities.length === 0 ? (
+        <Typography sx={{ color: '#a0a0a0' }}>No activities recorded yet.</Typography>
+      ) : (
+        <Grid container spacing={2}>
+          {recentActivities.map((activity) => (
+            <Grid key={activity.id} size={{ xs: 12, sm: 6, md: 4 }}>
+              <Card
+                sx={{
+                  cursor: 'pointer',
+                  transition: 'transform 0.15s ease, border-color 0.15s ease',
+                  '&:hover': { transform: 'translateY(-2px)', borderColor: '#FF5B93' },
+                }}
+                onClick={() => navigate(`/activities/${activity.id}`)}
+              >
+                <CardContent>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <Typography variant="h6" sx={{ color: '#ffffff' }}>{activity.type}</Typography>
+                    <Chip label={formatDate(activity)} size="small" sx={{ backgroundColor: '#2a2a2a', color: '#FFB6C1' }} />
+                  </Box>
+                  <Typography sx={{ color: '#a0a0a0' }}>Duration: {activity.duration} minutes</Typography>
+                  <Typography sx={{ color: '#a0a0a0' }}>Calories Burnt: {activity.caloriesBurnt}</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
         </Grid>
-      ))}
-    </Grid>
+      )}
+    </Box>
   );
 }
 

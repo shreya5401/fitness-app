@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router';
-import {Box, Button} from "@mui/material";
+import {Box, Typography, Button} from "@mui/material";
 import { useContext } from 'react';
 import { AuthContext } from 'react-oauth2-code-pkce';
 import { useDispatch } from 'react-redux';
@@ -8,13 +8,61 @@ import { useEffect, useState } from 'react';
 import ActivityList from './components/ActivityList';
 import ActivityForm from './components/ActivityForm';
 import ActivityDetail from './components/ActivityDetail';
+import ActivityDateDialog from './components/ActivityDateDialog';
+import LoginPage from './components/Login/LoginPage';
+import Navbar from './components/Navbar';
+import ActivityHeatmap from './components/Activity Heatmap/ActivityHeatmap';
+import { getActivities } from './services/api';
 
+const ActivitiesPage = ({ username }) => {
+  const [activities, setActivities] = useState([]);
+  const [formOpen, setFormOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
 
-const ActivitiesPage = () => {
+  const fetchActivities = async () => {
+    try {
+      const response = await getActivities();
+      setActivities(response.data);
+    } catch (error) {
+      console.error("Error fetching activities:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchActivities();
+  }, []);
+
   return(
-    <Box component="section" sx={{ p: 2 , border: '1px dashed grey'}}>
-      <ActivityForm onActivityAdded = {() => window.location.reload()} />
-      <ActivityList />
+    <Box component="section" sx={{ maxWidth: 1100, mx: 'auto' }}>
+      <Typography variant="h5" sx={{ color: '#ffffff', fontWeight: 600, mb: 3 }}>
+        Hi, {username}!
+      </Typography>
+
+      <ActivityHeatmap activities={activities} onDateClick={setSelectedDate} />
+
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 4 }}>
+        <Typography variant="h6" sx={{ color: '#ffffff' }}>Recent Activities</Typography>
+        <Button variant="contained" color="primary" onClick={() => setFormOpen(true)}>
+          + Add Activity
+        </Button>
+      </Box>
+
+      <ActivityList activities={activities} />
+
+      <ActivityForm
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        onActivityAdded={() => {
+          setFormOpen(false);
+          fetchActivities();
+        }}
+      />
+
+      <ActivityDateDialog
+        date={selectedDate}
+        activities={activities}
+        onClose={() => setSelectedDate(null)}
+      />
     </Box>
   )
 }
@@ -23,6 +71,7 @@ function App() {
   const {token, tokenData, logIn, logOut, isAuthenticated} = useContext(AuthContext);
   const dispatch = useDispatch();
   const [authReady, setAuthReady] = useState(false);
+  const username = tokenData?.given_name || tokenData?.preferred_username || tokenData?.name || 'there';
 
   useEffect(() => {
     if(token){
@@ -34,26 +83,21 @@ function App() {
   return(
     <Router>
       {!token ? (
-        <Button variant="contained" color="#dc004e"
-        onClick={() => {
-          logIn();
-        }}>Login</Button>
+        <LoginPage onLogin={() => logIn()} />
       ) : (
-        // <div>
-        //   <pre>{JSON.stringify(tokenData, null, 2)}</pre>
-        //   <pre>{JSON.stringify(token, null, 2)}</pre>
-        // </div>
-        <Box component="section" sx={{ p: 2 , border: '1px dashed grey'}}>
-          <Button variant="contained" color="secondary" onClick={logOut}>Logout</Button>
-          <Routes>
-            <Route path="/activities" element={<ActivitiesPage />} />
-            <Route path="/activities/:id" element={<ActivityDetail />} />
+        <Box sx={{ minHeight: '100vh', backgroundColor: '#171717' }}>
+          <Navbar onLogout={logOut} />
+          <Box component="section" sx={{ p: { xs: 2, md: 4 } }}>
+            <Routes>
+              <Route path="/activities" element={<ActivitiesPage username={username} />} />
+              <Route path="/activities/:id" element={<ActivityDetail />} />
 
-            <Route path="/" element={token ? <Navigate to="/activities" replace /> : <div>Please log in</div>} />
-          </Routes>
+              <Route path="/" element={token ? <Navigate to="/activities" replace /> : <div>Please log in</div>} />
+            </Routes>
+          </Box>
         </Box>
       ) }
-      
+
     </Router>
   )
 }

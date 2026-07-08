@@ -1,0 +1,29 @@
+.activity-heatmap .react-calendar-heatmap {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.activity-heatmap .react-calendar-heatmap text {
+  fill: #ffb6c1;
+  font-size: 7px;
+}
+
+.activity-heatmap .react-calendar-heatmap rect {
+  rx: 1.5;
+}
+
+.activity-heatmap .react-calendar-heatmap .color-empty {
+  fill: #2a2a2a;
+}
+
+.activity-heatmap .react-calendar-heatmap .color-filled {
+  fill: #ff5b93;
+  cursor: pointer;
+}
+
+.activity-heatmap .react-calendar-heatmap .color-filled:hover,
+.activity-heatmap .react-calendar-heatmap .color-empty:hover {
+  stroke: #d6336c;
+  stroke-width: 1px;
+}
