@@ -1,12 +1,13 @@
 package com.fitness.gateway;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 
-import com.fitness.gateway.user.RegisterRequest;
+import com.fitness.common.dto.RegisterRequest;
 import com.fitness.gateway.user.UserService;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
@@ -20,13 +21,16 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class KeycloakUserSyncFilter implements WebFilter {
     private final UserService userService;
-    
+
+    @Value("${internal.api.secret}")
+    private String internalApiSecret;
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain){
         String userId = exchange.getRequest().getHeaders().getFirst("X-User-ID");
         String token = exchange.getRequest().getHeaders().getFirst("Authorization");
         RegisterRequest registerRequest = getUserDetails(token);
-        if(userId==null){
+        if(userId==null && registerRequest!=null){
             userId=registerRequest.getKeycloakId();
         }
         if(userId!=null && token!=null){
@@ -42,7 +46,7 @@ public class KeycloakUserSyncFilter implements WebFilter {
                         else{
                             return Mono.empty();
                         }
-                        
+
                     }
                     else{
                         log.info("User already exist, Skipping sync.");
@@ -53,6 +57,7 @@ public class KeycloakUserSyncFilter implements WebFilter {
                         ServerHttpRequest mutatedRequest = exchange.getRequest()
                                 .mutate()
                                 .header("X-User-ID", finalUserId)
+                                .header("X-Internal-Secret", internalApiSecret)
                                 .build();
 
                         return chain.filter(
@@ -62,7 +67,11 @@ public class KeycloakUserSyncFilter implements WebFilter {
                         );
                     }));
         }
-        return chain.filter(exchange);
+        ServerHttpRequest mutatedRequest = exchange.getRequest()
+                .mutate()
+                .header("X-Internal-Secret", internalApiSecret)
+                .build();
+        return chain.filter(exchange.mutate().request(mutatedRequest).build());
     }
 
     private RegisterRequest getUserDetails(String token) {
@@ -79,7 +88,7 @@ public class KeycloakUserSyncFilter implements WebFilter {
 
             return registerRequest;
         }catch(Exception e){
-            e.printStackTrace();
+            log.error("Failed to parse JWT for user sync", e);
             return null;
         }
     }

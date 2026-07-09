@@ -75,12 +75,16 @@ export const theme = createTheme({
             borderColor: '#FF5B93',
           },
         },
+        input: {
+          colorScheme: 'dark',
+        },
       },
     },
     MuiInputLabel: {
       styleOverrides: {
         root: {
           color: '#a0a0a0',
+          fontSize: '0.85rem',
         },
       },
     },

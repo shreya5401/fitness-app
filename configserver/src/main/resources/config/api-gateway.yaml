@@ -1,13 +1,30 @@
 spring:
+  config:
+    import: optional:file:.env[.properties]
   security:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: http://localhost:8181/realms/fitness-oauth2/protocol/openid-connect/certs
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8181/realms/fitness-oauth2/protocol/openid-connect/certs}
   cloud:
     gateway:
       server:
         webflux:
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOrigins: ${CORS_ALLOWED_ORIGIN:http://localhost:5173}
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders:
+                  - Authorization
+                  - Content-Type
+                  - X-User-ID
+                allowCredentials: true
           routes:
             - id: user-service
               uri: lb://USER-SERVICE
@@ -17,10 +34,22 @@ spring:
               uri: lb://ACTIVITY-SERVICE
               predicates:
                 - Path=/api/activities/**
+            - id: custom-exercise-service
+              uri: lb://ACTIVITY-SERVICE
+              predicates:
+                - Path=/api/custom-exercises/**
             - id: ai-service
               uri: lb://AI-SERVICE
               predicates:
                 - Path=/api/recommendations/**
+            - id: voice-service
+              uri: lb://AI-SERVICE
+              predicates:
+                - Path=/api/voice/**
+
+internal:
+  api:
+    secret: ${INTERNAL_API_SECRET}
 
 server:
   port: 8080

@@ -4,13 +4,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fitness.aiservice.model.Activity;
-import com.fitness.aiservice.model.Recommendation;
+import com.fitness.aiservice.dto.ActivitySnapshotRequest;
+import com.fitness.aiservice.model.DayRecommendation;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,13 +22,20 @@ import lombok.extern.slf4j.Slf4j;
 public class ActivityAIService {
     private final GeminiService geminiService;
 
-    public Recommendation generateRecommendation(Activity activity){
-        String prompt= createPromptForActivity(activity);
+    public DayRecommendation generateDayRecommendation(String userId, String date, List<ActivitySnapshotRequest> activities){
+        String prompt= createPromptForDay(date, activities);
         String aiResponse=geminiService.getAnswer(prompt);
-        return processAiResponse(activity, aiResponse);
+        return buildDayRecommendation(userId, date, activities, aiResponse);
     }
 
-    private Recommendation processAiResponse(Activity activity, String aiResponse){
+    private DayRecommendation buildDayRecommendation(String userId, String date, List<ActivitySnapshotRequest> activities, String aiResponse){
+        List<DayRecommendation.ActivitySnapshot> snapshot = activities.stream()
+            .map(a -> DayRecommendation.ActivitySnapshot.builder()
+                .activityId(a.getActivityId())
+                .updatedAt(a.getUpdatedAt())
+                .build())
+            .collect(Collectors.toList());
+
         try{
             ObjectMapper mapper= new ObjectMapper();
             JsonNode rootNode= mapper.readTree(aiResponse);
@@ -38,13 +46,11 @@ public class ActivityAIService {
             .path("parts")
             .get(0)
             .path("text");
-            
+
             String jsonContent=textNode.asText()
             .replaceAll("```json\\n","")
             .replaceAll("\\n```","")
             .trim();
-
-            //log.info("PARSED REPONSE FROM AI: {}", jsonContent);
 
             JsonNode analysisJson = mapper.readTree(jsonContent);
             JsonNode analysisNode = analysisJson.path("analysis");
@@ -58,28 +64,28 @@ public class ActivityAIService {
             List<String> suggestions=extractSuggestions(analysisJson.path("suggestions"));
             List<String> safety=extractSafetyGuidelines(analysisJson.path("safety"));
 
-            return Recommendation.builder()
-                    .activityId(activity.getId())
-                    .userId(activity.getUserId())
-                    .activityType(activity.getType())
+            return DayRecommendation.builder()
+                    .userId(userId)
+                    .date(date)
                     .recommendation(fullAnalysis.toString().trim())
                     .improvements(improvements)
                     .suggestions(suggestions)
                     .safety(safety)
-                    .createdAt(LocalDateTime.now())
+                    .activitySnapshot(snapshot)
+                    .generatedAt(LocalDateTime.now())
                     .build();
 
         }catch (Exception e) {
-            e.printStackTrace();
-            return Recommendation.builder()
-            .activityId(activity.getId())
-            .userId(activity.getUserId())
-            .activityType(activity.getType())
+            log.error("Failed to parse AI response for day recommendation: {}", e.getMessage(), e);
+            return DayRecommendation.builder()
+            .userId(userId)
+            .date(date)
             .recommendation("Unable to generate recommendation.")
             .improvements(Collections.singletonList("No improvements available"))
             .suggestions(Collections.singletonList("No suggestions available"))
             .safety(Collections.singletonList("No safety guidelines available"))
-            .createdAt(LocalDateTime.now())
+            .activitySnapshot(snapshot)
+            .generatedAt(LocalDateTime.now())
             .build();
         }
     }
@@ -97,7 +103,7 @@ public class ActivityAIService {
                 ? Collections.singletonList("Follow general safety guidelines")
                 : safety;
     }
-        
+
 
     private List<String> extractSuggestions(JsonNode suggestionsNode) {
         List<String> suggestions = new ArrayList<>();
@@ -139,10 +145,34 @@ public class ActivityAIService {
         }
     }
 
-    private String createPromptForActivity(Activity activity){
+    private String formatSets(List<ActivitySnapshotRequest.SetDto> sets){
+        if(sets == null || sets.isEmpty()){
+            return "N/A";
+        }
+        return sets.stream()
+            .map(set -> set.getWeight() != null
+                ? String.format("%d reps @ %s", set.getReps(), set.getWeight())
+                : String.format("%d reps", set.getReps()))
+            .collect(Collectors.joining(", "));
+    }
+
+    private String createPromptForDay(String date, List<ActivitySnapshotRequest> activities){
+        StringBuilder exercisesBlock = new StringBuilder();
+        for (ActivitySnapshotRequest a : activities) {
+            exercisesBlock.append(String.format(
+                "- Exercise: %s | Muscle Group: %s | Duration: %s minutes | Calories Burned: %s | Sets: %s%n",
+                a.getType(),
+                a.getMuscleGroup(),
+                a.getDuration() != null ? a.getDuration() : "N/A",
+                a.getCaloriesBurnt() != null ? a.getCaloriesBurnt() : "N/A",
+                formatSets(a.getSets())
+            ));
+        }
+
         return String.format(
             """
-                 Analyze this fitness activity and provide detailed recommendations in the following format
+                 Analyze this full day of fitness activity (%s) and provide detailed recommendations in the
+                 following format
                   {
                       "analysis" : {
                           "overall": "Overall analysis here",
@@ -167,16 +197,15 @@ public class ActivityAIService {
                           "Safety point 2"
                       ]
                   }
-                
-                  Analyze this activity:
-                  Activity Type: %s
-                  Duration: %d minutes
-                  calories Burned: %d
-                  Additional Metrics: %s
-                
-                  Provide detailed analysis focusing on performance, improvements, next workout suggestions, and safety guidelines
+
+                  Here are ALL the exercises logged for this day:
+                  %s
+
+                  Analyze the day as a whole (not each exercise individually) focusing on overall training
+                  balance, muscle groups worked vs neglected, total volume and intensity, pacing across the
+                  session, total calories burned, next-day recovery guidance, and safety guidelines.
                   Ensure the response follows the EXACT JSON format shown above.
-            """, activity.getType(), activity.getDuration(), activity.getCaloriesBurnt(),activity.getAdditionalMetrics()
+            """, date, exercisesBlock.toString()
         );
     }
 }

@@ -12,13 +12,15 @@ import jakarta.validation.Valid;
 import com.fitness.userservice.service.UserService;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
-import com.fitness.userservice.dto.UserResponse;
-import com.fitness.userservice.dto.RegisterRequest;
+import com.fitness.common.dto.UserResponse;
+import com.fitness.common.dto.RegisterRequest;
 
 @RestController
 @RequestMapping("/api/users")
 @AllArgsConstructor
+@Slf4j
 public class UserController {
 
     private UserService userService;
@@ -30,6 +32,7 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request){
+        log.info("Received registration request for email {}", request.getEmail());
         return ResponseEntity.ok(userService.register(request));
     }
 

@@ -1,6 +1,7 @@
 package com.fitness.activityservice.model;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.annotation.CreatedDate;
@@ -23,7 +24,9 @@ public class Activity {
     @Id
     private String id;
     private String userId;
-    private ActivityType type;
+    private String type;
+    private MuscleGroup muscleGroup;
+    private List<ExerciseSet> sets;
     private Integer duration;
     private Integer caloriesBurnt;
     private LocalDateTime startTime;

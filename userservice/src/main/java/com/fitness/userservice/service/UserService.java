@@ -2,8 +2,9 @@ package com.fitness.userservice.service;
 
 import org.springframework.stereotype.Service;
 
-import com.fitness.userservice.dto.RegisterRequest;
-import com.fitness.userservice.dto.UserResponse;
+import com.fitness.common.dto.RegisterRequest;
+import com.fitness.common.dto.UserResponse;
+import com.fitness.userservice.exception.ResourceNotFoundException;
 import com.fitness.userservice.model.User;
 import com.fitness.userservice.repository.UserRepository;
 
@@ -18,8 +19,10 @@ public class UserService {
     private final UserRepository repository;
 
     public UserResponse register(RegisterRequest request){
+        log.info("Registering user with email {}", request.getEmail());
 
         if(repository.existsByEmail(request.getEmail())){
+            log.info("User with email {} already exists, returning existing profile", request.getEmail());
             User existingUser = repository.findByEmail(request.getEmail());
             UserResponse userResponse = new UserResponse();
             userResponse.setId(existingUser.getId());
@@ -41,6 +44,7 @@ public class UserService {
         user.setLastName(request.getLastName());
 
         User savedUser = repository.save(user);
+        log.info("Registered new user {} with keycloakId {}", savedUser.getId(), savedUser.getKeycloakId());
         UserResponse userResponse = new UserResponse();
         userResponse.setKeycloakId(savedUser.getKeycloakId());
         userResponse.setId(savedUser.getId());
@@ -56,7 +60,7 @@ public class UserService {
 
     public UserResponse getUserProfile(String userId) {
         User user = repository.findById(userId)
-        .orElseThrow(() -> new RuntimeException("User Not Found"));
+        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
         UserResponse userResponse = new UserResponse();
         userResponse.setId(user.getId());
@@ -72,9 +76,9 @@ public class UserService {
     }
 
     public Boolean existByUserId(String userId) {
-        log.info("Checking existsByKeycloakId for: '{}'", userId);
+        log.debug("Checking existsByKeycloakId for: '{}'", userId);
         Boolean result = repository.existsByKeycloakId(userId);
-        log.info("existsByKeycloakId result: {}", result);
+        log.debug("existsByKeycloakId result: {}", result);
         return result;
     }
 }
