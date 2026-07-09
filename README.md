@@ -12,14 +12,6 @@ A microservices-based fitness tracking application. Users log in, record workout
 - **Activity heatmap** — a GitHub-style yearly calendar view of training consistency
 - **Service discovery & centralized config** — Eureka + Spring Cloud Config so services can be scaled/reconfigured independently
 
-## Screenshots
-
-_Add screenshots or a short screen recording of the login page, activity heatmap, day view, and voice log dialog here._
-
-## Demo
-
-_Add a link to a hosted demo or demo video here._
-
 ## Tech Stack
 
 **Backend**
